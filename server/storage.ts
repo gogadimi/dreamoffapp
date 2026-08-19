@@ -56,9 +56,10 @@ export async function deleteImage(publicPath: string | null | undefined): Promis
 
     try {
         await unlink(join(UPLOADS_DIR, filename));
-    } catch (err: any) {
-        if (err?.code !== 'ENOENT') {
-            console.warn(`[DreamOff] Could not delete image ${filename}:`, err?.message ?? err);
+    } catch (err) {
+        const code = (err as NodeJS.ErrnoException)?.code;
+        if (code !== 'ENOENT') {
+            console.warn(`[DreamOff] Could not delete image ${filename}:`, err);
         }
     }
 }

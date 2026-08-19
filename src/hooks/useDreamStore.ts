@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { apiRegister, apiLogin, apiGetMe, removeToken, getToken } from '../services/authApi';
 import { fetchDreams, createDream, deleteDreamApi } from '../services/dreamsApi';
-import { Dream, User } from '../types/index';
+import { Dream, User, errorMessage } from '../types/index';
 
 // ============================================================
 // 1. Global State (Singleton)
@@ -76,7 +76,7 @@ const store = {
             notify();
             return { success: true };
         } catch (err) {
-            return { success: false, error: err.message };
+            return { success: false, error: errorMessage(err) };
         }
     },
 
@@ -88,7 +88,7 @@ const store = {
             notify();
             return { success: true };
         } catch (err) {
-            return { success: false, error: err.message };
+            return { success: false, error: errorMessage(err) };
         }
     },
 

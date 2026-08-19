@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { User, Settings, Globe, Moon, X, Check, ArrowLeft, ArrowRight, LogOut } from 'lucide-react';
+import { Globe, Moon, X, Check, ArrowLeft, ArrowRight, LogOut } from 'lucide-react';
 import Card from '../components/Card';
 import { useDreamStore } from '../hooks/useDreamStore';
 import { LANGUAGES, t } from '../utils/translations';
+import { NavigateFn } from '../types/index';
 
-export default function ProfileScreen({ onNavigate }) {
+export default function ProfileScreen({ onNavigate }: { onNavigate: NavigateFn }) {
     const { language, setLanguage, currentUser, logoutUser } = useDreamStore();
     const [showLangPicker, setShowLangPicker] = useState(false);
 

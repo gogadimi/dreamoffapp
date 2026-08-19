@@ -370,7 +370,12 @@ export const translations = {
     }
 };
 
-export const t = (lang, key) => {
-    // Basic fallback logic
-    return translations[lang]?.[key] || translations['en'][key] || key;
+/** Only English is complete; every other locale falls back to it per key. */
+export type TranslationKey = keyof typeof translations.en;
+export type LanguageCode = keyof typeof translations;
+
+export const t = (lang: string, key: TranslationKey | string): string => {
+    const locale = translations[lang as LanguageCode] as Record<string, string> | undefined;
+    const fallback = translations.en as Record<string, string>;
+    return locale?.[key] || fallback[key] || key;
 };

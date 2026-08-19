@@ -1,8 +1,8 @@
-import React from 'react';
-import { ArrowLeft, Brain, Book } from 'lucide-react';
+import { ArrowLeft, Brain } from 'lucide-react';
 import Card from '../components/Card';
 import { useDreamStore } from '../hooks/useDreamStore';
 import { t } from '../utils/translations';
+import { NavigateFn } from '../types/index';
 
 const MODELS_INFO = [
     {
@@ -37,7 +37,7 @@ const MODELS_INFO = [
     }
 ];
 
-export default function ModelsScreen({ onNavigate }) {
+export default function ModelsScreen({ onNavigate }: { onNavigate: NavigateFn }) {
     const { language } = useDreamStore();
 
     return (

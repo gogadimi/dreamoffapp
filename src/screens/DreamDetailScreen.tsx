@@ -70,7 +70,7 @@ export default function DreamDetailScreen({ dreamId, onBack }: { dreamId: string
                         <div className="space-y-4">
                             {/* Summary */}
                             <Card className="text-lg text-primary/90 italic border-l-4 border-gold bg-surfaceLight/30">
-                                "{dream.interpretation.summary || dream.interpretation.overview}"
+                                &ldquo;{dream.interpretation.summary || dream.interpretation.overview}&rdquo;
                             </Card>
 
                             {/* Lenses */}
@@ -116,7 +116,7 @@ export default function DreamDetailScreen({ dreamId, onBack }: { dreamId: string
                                 <div className="bg-surfaceLight/30 p-4 rounded-xl border border-dashed border-border/30">
                                     <h3 className="text-gray-500 text-xs uppercase mb-2">Guidance</h3>
                                     <ul className="list-disc list-inside text-sm text-gray-400 space-y-1">
-                                        {(dream.interpretation.reflections || dream.interpretation.actions).map((r, i) => (
+                                        {(dream.interpretation.reflections ?? dream.interpretation.actions ?? []).map((r: string, i: number) => (
                                             <li key={i}>{r}</li>
                                         ))}
                                     </ul>
@@ -136,7 +136,7 @@ export default function DreamDetailScreen({ dreamId, onBack }: { dreamId: string
                     <section>
                         <h3 className="text-accent text-sm uppercase tracking-widest mb-2 font-bold">Transcription</h3>
                         <div className="bg-surfaceLight/50 p-4 rounded-lg italic text-gray-400 border-l-2 border-border">
-                            "{dream.transcription || dream.text}"
+                            &ldquo;{dream.transcription || dream.text}&rdquo;
                         </div>
                     </section>
                 )}

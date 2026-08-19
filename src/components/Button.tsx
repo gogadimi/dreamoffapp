@@ -1,8 +1,13 @@
-import React from 'react';
-import { clsx } from 'clsx';
+import { ButtonHTMLAttributes } from 'react';
 import { twMerge } from 'tailwind-merge';
 
-export default function Button({ children, className, variant = 'primary', ...props }) {
+type ButtonVariant = 'primary' | 'action' | 'secondary' | 'icon';
+
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+    variant?: ButtonVariant;
+}
+
+export default function Button({ children, className, variant = 'primary', ...props }: ButtonProps) {
     const baseStyles = "rounded-lg font-serif px-6 py-3 transition-all duration-300 flex items-center justify-center gap-2 active:scale-95";
 
     const variants = {

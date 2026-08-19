@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { NavigateFn } from '../types/index';
 import { Mic, Send, Loader2, ArrowLeft, ChevronDown, Check } from 'lucide-react';
 import Button from '../components/Button';
 import Card from '../components/Card';
@@ -15,7 +16,23 @@ const MODELS = [
     { id: 'spiritual', name: 'Spiritual / New Age' }
 ];
 
-export default function AddDreamScreen({ onNavigate, initialMode = 'write' }: { onNavigate: (screen: string, params?: any) => void; initialMode?: string }) {
+// The Web Speech API is prefixed and untyped in lib.dom, so the shape this
+// component actually uses is spelled out here rather than cast away at usage.
+interface SpeechRecognitionLike {
+    continuous: boolean;
+    interimResults: boolean;
+    lang: string;
+    onresult: (event: SpeechRecognitionEventLike) => void;
+    start(): void;
+    stop(): void;
+}
+
+interface SpeechRecognitionEventLike {
+    resultIndex: number;
+    results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }>;
+}
+
+export default function AddDreamScreen({ onNavigate, initialMode = 'write' }: { onNavigate: NavigateFn; initialMode?: string }) {
     // initialMode passed from App.jsx: 'record' or 'write'
     const [text, setText] = useState('');
     const [isRecording, setIsRecording] = useState(false);
@@ -25,7 +42,7 @@ export default function AddDreamScreen({ onNavigate, initialMode = 'write' }: { 
     const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false); // State for custom dropdown
 
     const { addDream, language } = useDreamStore();
-    const recognitionRef = useRef(null);
+    const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
     const toggleRecording = () => {
         if (isRecording) {
@@ -36,12 +53,12 @@ export default function AddDreamScreen({ onNavigate, initialMode = 'write' }: { 
                 alert("Speech recognition not supported in this browser.");
                 return;
             }
-            const recognition = new (window as any).webkitSpeechRecognition();
+            const recognition: SpeechRecognitionLike = new (window as any).webkitSpeechRecognition();
             recognition.continuous = true;
             recognition.interimResults = true;
             recognition.lang = language === 'mk' ? 'mk-MK' : 'en-US';
 
-            recognition.onresult = (event) => {
+            recognition.onresult = (event: SpeechRecognitionEventLike) => {
                 let final = '';
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
                     if (event.results[i].isFinal) final += event.results[i][0].transcript;
@@ -80,9 +97,9 @@ export default function AddDreamScreen({ onNavigate, initialMode = 'write' }: { 
                 model: selectedModel,
                 layout: deviceType,
                 language: language,
-                transcription: (interpResult as any).transcription,
-                interpretation: (interpResult as any).interpretation,
-                imageUrl: imageUrl as string
+                transcription: interpResult.transcription,
+                interpretation: interpResult.interpretation,
+                imageUrl
             });
 
             onNavigate('detail', newDream.id);
@@ -142,7 +159,7 @@ export default function AddDreamScreen({ onNavigate, initialMode = 'write' }: { 
                     {/* Show preview only if text exists */}
                     {text && (
                         <div className="w-full bg-surface/50 p-4 rounded-xl border border-border/30 max-h-40 overflow-y-auto animate-slide-up">
-                            <p className="text-gray-300 italic">"{text}"</p>
+                            <p className="text-gray-300 italic">&ldquo;{text}&rdquo;</p>
                         </div>
                     )}
                 </div>

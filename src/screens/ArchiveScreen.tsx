@@ -1,8 +1,9 @@
 import { Search, ArrowLeft, Moon } from 'lucide-react';
 import Card from '../components/Card';
 import { useDreamStore } from '../hooks/useDreamStore';
+import { NavigateFn } from '../types/index';
 
-export default function ArchiveScreen({ onNavigate }) {
+export default function ArchiveScreen({ onNavigate }: { onNavigate: NavigateFn }) {
     const { dreams } = useDreamStore();
 
     return (

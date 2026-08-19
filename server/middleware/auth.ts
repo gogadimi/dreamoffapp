@@ -1,22 +1,23 @@
 // JWT authentication middleware
 // Extracts Bearer token from Authorization header and verifies it
 
+import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '../config.js';
 
-export function authenticateToken(req, res, next) {
+export function authenticateToken(req: Request, res: Response, next: NextFunction): void {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
-        return res.status(401).json({ error: 'Access denied. No token provided.' });
+        res.status(401).json({ error: 'Access denied. No token provided.' });
+        return;
     }
 
     try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        req.user = decoded; // { email, name, iat, exp }
+        req.user = jwt.verify(token, JWT_SECRET) as Express.UserClaims;
         next();
-    } catch (err) {
-        return res.status(401).json({ error: 'Invalid or expired token.' });
+    } catch {
+        res.status(401).json({ error: 'Invalid or expired token.' });
     }
 }

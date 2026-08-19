@@ -1,4 +1,4 @@
-import { Router, Response } from 'express';
+import { Router, Request, Response } from 'express';
 import Dream from '../models/Dream.js';
 import { User } from '../models/index.js';
 import { authenticateToken } from '../middleware/auth.js';
@@ -36,8 +36,11 @@ const WRITABLE = [
     'text', 'model', 'language', 'layout', 'transcription', 'interpretation', 'imageUrl'
 ] as const;
 
-function pickWritable(body: Record<string, unknown>) {
-    const out: Record<string, unknown> = {};
+type WritableField = (typeof WRITABLE)[number];
+type DreamInput = Partial<Record<WritableField, unknown>>;
+
+function pickWritable(body: Record<string, unknown>): DreamInput {
+    const out: DreamInput = {};
     for (const key of WRITABLE) {
         if (body[key] !== undefined) out[key] = body[key];
     }
@@ -45,9 +48,9 @@ function pickWritable(body: Record<string, unknown>) {
 }
 
 // ── Get all dreams for the current user ──
-router.get('/', async (req: any, res: Response): Promise<any> => {
+router.get('/', async (req: Request, res: Response) => {
     try {
-        const user = await User.findOne({ where: { email: req.user.email } });
+        const user = await User.findOne({ where: { email: req.user!.email } });
         if (!user) return res.status(404).json({ error: 'User not found' });
 
         const dreams = await Dream.findAll({
@@ -63,15 +66,17 @@ router.get('/', async (req: any, res: Response): Promise<any> => {
 });
 
 // ── Add a new dream ──
-router.post('/', async (req: any, res: Response): Promise<any> => {
+router.post('/', async (req: Request, res: Response) => {
     try {
-        const user = await User.findOne({ where: { email: req.user.email } });
+        const user = await User.findOne({ where: { email: req.user!.email } });
         if (!user) return res.status(404).json({ error: 'User not found' });
 
+        // The allow-list is validated at runtime, not by the type system;
+        // Sequelize's creation type cannot express "some subset of these".
         const newDream = await Dream.create({
             ...pickWritable(req.body ?? {}),
             userId: user.id
-        } as any);
+        } as Parameters<typeof Dream.create>[0]);
 
         res.status(201).json(serialize(newDream));
     } catch (err) {
@@ -81,9 +86,9 @@ router.post('/', async (req: any, res: Response): Promise<any> => {
 });
 
 // ── Delete a dream ──
-router.delete('/:id', async (req: any, res: Response): Promise<any> => {
+router.delete('/:id', async (req: Request, res: Response) => {
     try {
-        const user = await User.findOne({ where: { email: req.user.email } });
+        const user = await User.findOne({ where: { email: req.user!.email } });
         if (!user) return res.status(404).json({ error: 'User not found' });
 
         // Read the row first so we know which file to clean up.

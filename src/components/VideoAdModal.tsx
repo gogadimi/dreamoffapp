@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Play, SkipForward, Info, Volume2 } from 'lucide-react';
 
-export default function VideoAdModal({ onComplete }) {
+export default function VideoAdModal({ onComplete }: { onComplete: () => void }) {
     const [secondsLeft, setSecondsLeft] = useState(5);
     const [canSkip, setCanSkip] = useState(false);
 

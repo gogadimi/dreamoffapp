@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { HfInference } from '@huggingface/inference';
 import { authenticateToken } from '../middleware/auth.js';
@@ -8,7 +8,7 @@ import { saveImage } from '../storage.js';
 const router = Router();
 
 // POST /api/ai/interpret
-router.post('/interpret', authenticateToken, async (req: any, res: any) => {
+router.post('/interpret', authenticateToken, async (req: Request, res: Response) => {
     try {
         const { text, model, language, layout } = req.body;
         
@@ -63,7 +63,7 @@ router.post('/interpret', authenticateToken, async (req: any, res: any) => {
 });
 
 // POST /api/ai/image
-router.post('/image', authenticateToken, async (req: any, res: any) => {
+router.post('/image', authenticateToken, async (req: Request, res: Response) => {
     try {
         const { text } = req.body;
         

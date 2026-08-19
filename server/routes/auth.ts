@@ -13,7 +13,7 @@ import { JWT_SECRET, JWT_EXPIRES_IN } from '../config.js';
 const router = Router();
 const SALT_ROUNDS = 10;
 
-function generateToken(user: any) {
+function generateToken(user: { email: string; name: string }) {
     return jwt.sign(
         { email: user.email, name: user.name },
         JWT_SECRET,
@@ -22,7 +22,7 @@ function generateToken(user: any) {
 }
 
 // ── Register ──
-router.post('/register', async (req: Request, res: Response): Promise<any> => {
+router.post('/register', async (req: Request, res: Response) => {
     try {
         const { name, email, password } = req.body;
 
@@ -63,7 +63,7 @@ router.post('/register', async (req: Request, res: Response): Promise<any> => {
 });
 
 // ── Login ──
-router.post('/login', async (req: Request, res: Response): Promise<any> => {
+router.post('/login', async (req: Request, res: Response) => {
     try {
         const { email, password } = req.body;
 
@@ -93,9 +93,9 @@ router.post('/login', async (req: Request, res: Response): Promise<any> => {
 });
 
 // ── Get current user (protected) ──
-router.get('/me', authenticateToken, async (req: any, res: Response): Promise<any> => {
+router.get('/me', authenticateToken, async (req: Request, res: Response) => {
     try {
-        const user = await User.findOne({ where: { email: req.user.email } });
+        const user = await User.findOne({ where: { email: req.user!.email } });
         if (!user) {
             return res.status(404).json({ error: 'User not found.' });
         }

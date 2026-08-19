@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ComponentType } from 'react';
 import { Home, PlusCircle, Book, User } from 'lucide-react';
 import HomeScreen from './screens/HomeScreen';
 import AddDreamScreen from './screens/AddDreamScreen';
@@ -9,23 +9,24 @@ import LoginScreen from './screens/LoginScreen';
 import ModelsScreen from './screens/ModelsScreen';
 import { useDreamStore } from './hooks/useDreamStore';
 import { t } from './utils/translations';
+import { ScreenName, NavigateFn } from './types/index';
 
 function App() {
     // Get state from store (currentUser drives auth state)
     const { language, currentUser, authLoading, checkAuth } = useDreamStore();
 
     // Validate JWT on app mount — keeps user logged in across refresh
-    useEffect(() => { checkAuth(); }, []);
+    useEffect(() => { checkAuth(); }, [checkAuth]);
 
     // Derived state for clarity
     const isLoggedIn = !!currentUser;
 
-    const [navState, setNavState] = useState<{ screen: string; params?: any }>({ screen: 'home' });
+    const [navState, setNavState] = useState<{ screen: ScreenName; params?: any }>({ screen: 'home' });
 
     // params stays undefined when omitted — passing null here would defeat the
     // callee's default parameter (defaults fire on undefined, not on null).
-    const navigate = (screen: string, params?: any) => {
-        setNavState({ screen, params });
+    const navigate: NavigateFn = (screen, params) => {
+        setNavState({ screen: screen as ScreenName, params });
     };
 
     const renderScreen = () => {
@@ -48,7 +49,11 @@ function App() {
         }
     };
 
-    const NavIcon = ({ icon: Icon, label, screen }) => (
+    const NavIcon = ({ icon: Icon, label, screen }: {
+        icon: ComponentType<{ className?: string }>;
+        label: string;
+        screen: ScreenName;
+    }) => (
         <button
             onClick={() => navigate(screen)}
             className={`flex flex-col items-center justify-center w-16 h-16 transition-colors ${navState.screen === screen ? 'text-primary' : 'text-gray-600'}`}

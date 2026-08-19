@@ -3,8 +3,9 @@ import Card from '../components/Card';
 import { useDreamStore } from '../hooks/useDreamStore';
 import { t } from '../utils/translations';
 import AdBanner from '../components/AdBanner';
+import { NavigateFn } from '../types/index';
 
-export default function HomeScreen({ onNavigate }) {
+export default function HomeScreen({ onNavigate }: { onNavigate: NavigateFn }) {
     const { language, currentUser } = useDreamStore();
 
     const menuItems = [

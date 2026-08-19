@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, FormEvent, ReactNode } from 'react';
 import { useDreamStore } from '../hooks/useDreamStore';
 import { User, Lock, Mail, ArrowRight, Moon } from 'lucide-react';
 
@@ -11,7 +11,7 @@ const SOCIAL_BTN_CLASS =
 const ICON_BOX_CLASS =
     'w-9 h-9 rounded-xl bg-white/5 border border-gray-800/60 flex items-center justify-center flex-shrink-0';
 
-function SocialButton({ label, onClick, icon }) {
+function SocialButton({ label, onClick, icon }: { label: string; onClick: () => void; icon: ReactNode }) {
     return (
         <button type="button" onClick={onClick} className={SOCIAL_BTN_CLASS}>
             <div className={ICON_BOX_CLASS}>{icon}</div>
@@ -31,18 +31,18 @@ export default function LoginScreen() {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setError('');
         setIsLoading(true);
         try {
             if (isLogin) {
                 const result = await loginUser(email, password);
-                if (!result.success) setError(result.error);
+                if (!result.success) setError(result.error ?? 'Login failed.');
             } else {
                 if (!name || !email || !password) { setError('All fields are required'); setIsLoading(false); return; }
                 const result = await registerUser(name, email, password);
-                if (!result.success) setError(result.error);
+                if (!result.success) setError(result.error ?? 'Registration failed.');
             }
         } finally {
             setIsLoading(false);
