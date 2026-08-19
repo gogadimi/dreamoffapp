@@ -86,8 +86,9 @@ Dream.init({
     layout: { type: DataTypes.STRING, allowNull: true },
     transcription: { type: DataTypes.TEXT, allowNull: true },
     interpretation: { type: DataTypes.JSON, allowNull: true },
-    // TODO: base64 data URIs bloat every row and every list response.
-    // Move to on-disk/object storage and keep only a path here.
+    // A path such as "/uploads/<uuid>.png" -- see storage.ts. Kept as TEXT
+    // rather than STRING so rows written before that change, which still hold
+    // full base64 data URIs, keep working; both render fine in an <img>.
     imageUrl: { type: DataTypes.TEXT, allowNull: true }
 }, { sequelize, modelName: 'Dream', timestamps: true });
 

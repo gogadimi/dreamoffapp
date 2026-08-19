@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import Dream from '../models/Dream.js';
 import { User } from '../models/index.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { deleteImage } from '../storage.js';
 
 const router = Router();
 
@@ -85,13 +86,20 @@ router.delete('/:id', async (req: any, res: Response): Promise<any> => {
         const user = await User.findOne({ where: { email: req.user.email } });
         if (!user) return res.status(404).json({ error: 'User not found' });
 
-        const deletedCount = await Dream.destroy({
+        // Read the row first so we know which file to clean up.
+        const dream = await Dream.findOne({
             where: { id: req.params.id, userId: user.id }
         });
 
-        if (deletedCount === 0) {
+        if (!dream) {
             return res.status(404).json({ error: 'Dream not found' });
         }
+
+        const imagePath = dream.imageUrl;
+        await dream.destroy();
+
+        // Orphaned files are not worth failing the request over.
+        await deleteImage(imagePath);
 
         res.json({ success: true, id: req.params.id });
     } catch (err) {

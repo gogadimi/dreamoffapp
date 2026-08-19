@@ -143,3 +143,6 @@ server/*.log
 
 # ── Packaging artifacts ──
 *.zip
+
+# Generated dream images
+server/uploads/

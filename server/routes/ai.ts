@@ -3,6 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { HfInference } from '@huggingface/inference';
 import { authenticateToken } from '../middleware/auth.js';
 import { GEMINI_API_KEY, HUGGINGFACE_API_KEY } from '../config.js';
+import { saveImage } from '../storage.js';
 
 const router = Router();
 
@@ -78,19 +79,24 @@ router.post('/image', authenticateToken, async (req: any, res: any) => {
         const promptGen = await generativeModel.generateContent(`Create a short, descriptive 1-sentence prompt for an AI image generator (like Midjourney or DALL-E) based on this dream. Aim for a surreal, cinematic, mystical, and beautiful aesthetic. The dream is: "${text}". Reply ONLY with the English image prompt. Do NOT include any prefixes like "Prompt:".`);
         const imagePrompt = promptGen.response.text().trim();
 
-        // 2. Request the image from Hugging Face
-        const imageBlob = await hf.textToImage({
-            model: 'stabilityai/stable-diffusion-xl-base-1.0',
-            inputs: imagePrompt,
-            parameters: { negative_prompt: "blurry, poor quality, text, words, watermark, ugly" }
-        }) as Blob;
+        // 2. Request the image from Hugging Face.
+        //    outputType is passed explicitly: without it TS resolves to the
+        //    first overload (Promise<string>) while the call actually returns
+        //    a Blob, which is what the old `as Blob` cast was papering over.
+        const imageBlob = await hf.textToImage(
+            {
+                model: 'stabilityai/stable-diffusion-xl-base-1.0',
+                inputs: imagePrompt,
+                parameters: { negative_prompt: "blurry, poor quality, text, words, watermark, ugly" }
+            },
+            { outputType: 'blob' }
+        );
 
-        // 3. Convert blob to base64 Data URI
-        const arrayBuffer = await imageBlob.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        const base64Image = `data:${imageBlob.type};base64,${buffer.toString('base64')}`;
-        
-        res.json({ imageUrl: base64Image });
+        // 3. Persist to disk and hand back a path, not a megabyte of base64.
+        const buffer = Buffer.from(await imageBlob.arrayBuffer());
+        const imageUrl = await saveImage(buffer, imageBlob.type);
+
+        res.json({ imageUrl });
     } catch (error) {
         console.error('AI Image Error:', error);
         res.status(500).json({ error: 'Failed to generate image from AI.' });

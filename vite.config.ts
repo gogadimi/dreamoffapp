@@ -12,6 +12,11 @@ export default defineConfig({
             '/api': {
                 target: 'http://localhost:5001',
                 changeOrigin: true,
+            },
+            // Generated dream images are served off the Express side
+            '/uploads': {
+                target: 'http://localhost:5001',
+                changeOrigin: true,
             }
         }
     }
