@@ -9,20 +9,21 @@ import jwt from 'jsonwebtoken';
 import { User } from '../models/index.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { JWT_SECRET, JWT_EXPIRES_IN } from '../config.js';
+import { authLimiter } from '../middleware/rateLimit.js';
 
 const router = Router();
 const SALT_ROUNDS = 10;
 
-function generateToken(user: { email: string; name: string }) {
+function generateToken(user: { id: string; email: string; name: string }) {
     return jwt.sign(
-        { email: user.email, name: user.name },
+        { id: user.id, email: user.email, name: user.name },
         JWT_SECRET,
         { expiresIn: JWT_EXPIRES_IN }
     );
 }
 
 // ── Register ──
-router.post('/register', async (req: Request, res: Response) => {
+router.post('/register', authLimiter, async (req: Request, res: Response) => {
     try {
         const { name, email, password } = req.body;
 
@@ -43,15 +44,15 @@ router.post('/register', async (req: Request, res: Response) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-        const userToSave = {
+
+        const dbUser = await User.create({
             email: email.toLowerCase(),
             name,
             password: hashedPassword
-        };
+        });
 
-        const dbUser = await User.create(userToSave);
-
-        const token = generateToken(userToSave);
+        // Sign from the persisted row: only it has the generated id.
+        const token = generateToken(dbUser);
         res.status(201).json({
             token,
             user: { email: dbUser.email, name: dbUser.name, createdAt: dbUser.createdAt }
@@ -63,7 +64,7 @@ router.post('/register', async (req: Request, res: Response) => {
 });
 
 // ── Login ──
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', authLimiter, async (req: Request, res: Response) => {
     try {
         const { email, password } = req.body;
 
@@ -95,7 +96,7 @@ router.post('/login', async (req: Request, res: Response) => {
 // ── Get current user (protected) ──
 router.get('/me', authenticateToken, async (req: Request, res: Response) => {
     try {
-        const user = await User.findOne({ where: { email: req.user!.email } });
+        const user = await User.findByPk(req.user!.id);
         if (!user) {
             return res.status(404).json({ error: 'User not found.' });
         }

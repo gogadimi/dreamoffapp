@@ -4,7 +4,7 @@ import { existsSync } from 'node:fs';
 import { join, basename } from 'node:path';
 import app from '../app.js';
 import { initDB } from '../models/db.js';
-import { syncDB } from '../models/index.js';
+import { migrateDB } from '../models/index.js';
 import { saveImage, deleteImage, UPLOADS_DIR } from '../storage.js';
 
 const PNG = Buffer.from(
@@ -37,7 +37,7 @@ async function register(email: string) {
 
 beforeAll(async () => {
     await initDB();
-    await syncDB();
+    await migrateDB();
     alice = await register('alice@test.local');
     bob = await register('bob@test.local');
 });

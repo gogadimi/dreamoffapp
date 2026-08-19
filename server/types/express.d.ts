@@ -7,6 +7,8 @@ declare global {
     namespace Express {
         /** Claims carried by the JWT issued in routes/auth.ts. */
         interface UserClaims {
+            /** User primary key. Lets routes query dreams without a lookup. */
+            id: string;
             email: string;
             name: string;
             iat?: number;

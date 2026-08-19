@@ -1,6 +1,5 @@
 import { Router, Request, Response } from 'express';
 import Dream from '../models/Dream.js';
-import { User } from '../models/index.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { deleteImage } from '../storage.js';
 
@@ -50,11 +49,8 @@ function pickWritable(body: Record<string, unknown>): DreamInput {
 // ── Get all dreams for the current user ──
 router.get('/', async (req: Request, res: Response) => {
     try {
-        const user = await User.findOne({ where: { email: req.user!.email } });
-        if (!user) return res.status(404).json({ error: 'User not found' });
-
         const dreams = await Dream.findAll({
-            where: { userId: user.id },
+            where: { userId: req.user!.id },
             order: [['date', 'DESC']]
         });
 
@@ -68,14 +64,11 @@ router.get('/', async (req: Request, res: Response) => {
 // ── Add a new dream ──
 router.post('/', async (req: Request, res: Response) => {
     try {
-        const user = await User.findOne({ where: { email: req.user!.email } });
-        if (!user) return res.status(404).json({ error: 'User not found' });
-
         // The allow-list is validated at runtime, not by the type system;
         // Sequelize's creation type cannot express "some subset of these".
         const newDream = await Dream.create({
             ...pickWritable(req.body ?? {}),
-            userId: user.id
+            userId: req.user!.id
         } as Parameters<typeof Dream.create>[0]);
 
         res.status(201).json(serialize(newDream));
@@ -88,12 +81,9 @@ router.post('/', async (req: Request, res: Response) => {
 // ── Delete a dream ──
 router.delete('/:id', async (req: Request, res: Response) => {
     try {
-        const user = await User.findOne({ where: { email: req.user!.email } });
-        if (!user) return res.status(404).json({ error: 'User not found' });
-
         // Read the row first so we know which file to clean up.
         const dream = await Dream.findOne({
-            where: { id: req.params.id, userId: user.id }
+            where: { id: req.params.id, userId: req.user!.id }
         });
 
         if (!dream) {

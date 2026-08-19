@@ -6,12 +6,12 @@
 import { PORT, IS_PRODUCTION } from './config.js';
 import app from './app.js';
 import { initDB } from './models/db.js';
-import { syncDB } from './models/index.js';
+import { migrateDB } from './models/index.js';
 import { ensureUploadsDir } from './storage.js';
 
 async function start() {
     await initDB();
-    await syncDB();
+    await migrateDB();
     await ensureUploadsDir();
     app.listen(PORT, () => {
         console.log(`[DreamOff] Server running on port ${PORT} (${IS_PRODUCTION ? 'production' : 'development'})`);

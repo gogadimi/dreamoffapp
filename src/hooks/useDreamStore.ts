@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { apiRegister, apiLogin, apiGetMe, removeToken, getToken } from '../services/authApi';
+import { apiRegister, apiLogin, apiGetMe, removeToken, getToken, setUnauthorizedHandler } from '../services/authApi';
 import { fetchDreams, createDream, deleteDreamApi } from '../services/dreamsApi';
 import { Dream, User, errorMessage } from '../types/index';
 
@@ -150,6 +150,15 @@ const store = {
 
     getDream: (id: string) => memoryState.dreams.find(d => d.id === id)
 };
+
+// Any request that comes back 401 means the token is gone or rejected.
+// apiFetch has already cleared it; drop the session so the auth guard sends
+// the user to the login screen instead of leaving them on a dead screen.
+setUnauthorizedHandler(() => {
+    if (!memoryState.currentUser) return;
+    memoryState = { ...memoryState, currentUser: null, dreams: [] };
+    notify();
+});
 
 // ============================================================
 // 4. The Hook

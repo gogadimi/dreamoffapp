@@ -53,6 +53,13 @@ if (problems.length > 0) {
     process.exit(1);
 }
 
+// ── Rate limiting for /login and /register ──
+// Defaults allow a person who mistypes their password a few times while still
+// making a password-guessing run impractical. Tests raise the budget so that
+// the rest of the suite is not throttled by its own fixtures.
+export const AUTH_RATE_LIMIT_WINDOW_MS = Number(process.env.AUTH_RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000;
+export const AUTH_RATE_LIMIT_MAX = Number(process.env.AUTH_RATE_LIMIT_MAX) || 10;
+
 // AI keys are optional: the server runs fine without them, and the /api/ai
 // routes already return a clear 500 when they are absent.
 export const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim() || '';

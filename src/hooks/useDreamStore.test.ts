@@ -11,7 +11,13 @@ const fetchDreams = vi.fn();
 const createDream = vi.fn();
 const deleteDreamApi = vi.fn();
 
-vi.mock('../services/authApi', () => ({ apiRegister, apiLogin, apiGetMe, removeToken, getToken }));
+// Captured so a test can fire the handler the store registers for 401s.
+let unauthorizedHandler: (() => void) | null = null;
+const setUnauthorizedHandler = vi.fn((h: (() => void) | null) => { unauthorizedHandler = h; });
+
+vi.mock('../services/authApi', () => ({
+    apiRegister, apiLogin, apiGetMe, removeToken, getToken, setUnauthorizedHandler
+}));
 vi.mock('../services/dreamsApi', () => ({ fetchDreams, createDream, deleteDreamApi }));
 
 const user: User = { email: 'a@b.c', name: 'Dreamer', createdAt: '2026-01-01' };
@@ -202,5 +208,33 @@ describe('language', () => {
         const stored = localStorage.getItem('dream_diary_v1') ?? '';
         expect(stored).not.toContain('a@b.c');
         expect(stored).not.toContain('Dreamer');
+    });
+});
+
+describe('401 handling', () => {
+    it('registers an unauthorized handler with the API client', async () => {
+        await freshStore();
+        expect(setUnauthorizedHandler).toHaveBeenCalled();
+        expect(typeof unauthorizedHandler).toBe('function');
+    });
+
+    it('clears the session when a request comes back 401', async () => {
+        apiLogin.mockResolvedValue(user);
+        fetchDreams.mockResolvedValue([dream('1')]);
+        const { result } = await freshStore();
+
+        await act(async () => { await result.current.loginUser('a@b.c', 'x'); });
+        expect(result.current.currentUser).toEqual(user);
+
+        act(() => { unauthorizedHandler?.(); });
+
+        expect(result.current.currentUser).toBeNull();
+        expect(result.current.dreams).toEqual([]);
+    });
+
+    it('is a no-op when nobody is signed in', async () => {
+        const { result } = await freshStore();
+        expect(() => act(() => { unauthorizedHandler?.(); })).not.toThrow();
+        expect(result.current.currentUser).toBeNull();
     });
 });

@@ -17,6 +17,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 
+// cPanel/Netlify front the app with a reverse proxy. Without this, every
+// request looks like it comes from the proxy and the rate limiter would
+// throttle all users as one. Trust exactly one hop, not an arbitrary chain.
+app.set('trust proxy', 1);
+
 // ── CORS — same-origin only in production, open in dev ──
 app.use(cors(IS_PRODUCTION ? { origin: false } : {}));
 

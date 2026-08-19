@@ -5,11 +5,11 @@ import request from 'supertest';
 import jwt from 'jsonwebtoken';
 import app from '../app.js';
 import { initDB } from '../models/db.js';
-import { syncDB } from '../models/index.js';
+import { migrateDB } from '../models/index.js';
 
 beforeAll(async () => {
     await initDB();
-    await syncDB();
+    await migrateDB();
 });
 
 const credentials = (email: string) => ({ name: 'Dreamer', email, password: 'secret123' });
@@ -159,6 +159,57 @@ describe('GET /api/auth/me', () => {
         const res = await request(app).get('/api/auth/me').set('Authorization', `Bearer ${expired}`);
         expect(res.status).toBe(401);
         expect(res.body.error).toMatch(/invalid or expired/i);
+    });
+});
+
+describe('token claims', () => {
+    it('carries the user id so routes need no lookup', async () => {
+        const res = await request(app).post('/api/auth/register').send(credentials('claims@test.local'));
+        const claims = jwt.verify(res.body.token, process.env.JWT_SECRET!) as Record<string, unknown>;
+
+        expect(claims.id).toEqual(expect.any(String));
+        expect(claims.email).toBe('claims@test.local');
+        expect(claims.name).toBe('Dreamer');
+    });
+
+    it('never puts the password hash in the token', async () => {
+        const res = await request(app).post('/api/auth/register').send(credentials('nopw@test.local'));
+        const claims = jwt.verify(res.body.token, process.env.JWT_SECRET!) as Record<string, unknown>;
+        expect(claims).not.toHaveProperty('password');
+    });
+
+    it('issues the same id on login as on register', async () => {
+        const registered = await request(app).post('/api/auth/register').send(credentials('same@test.local'));
+        const loggedIn = await request(app)
+            .post('/api/auth/login')
+            .send({ email: 'same@test.local', password: 'secret123' });
+
+        const a = jwt.verify(registered.body.token, process.env.JWT_SECRET!) as { id: string };
+        const b = jwt.verify(loggedIn.body.token, process.env.JWT_SECRET!) as { id: string };
+        expect(a.id).toBe(b.id);
+    });
+
+    // Tokens minted before the id claim existed cannot identify a user without
+    // the lookup this change removed, so they must be refused outright.
+    it('rejects a legacy token that has no id claim', async () => {
+        const legacy = jwt.sign(
+            { email: 'legacy@test.local', name: 'Dreamer' },
+            process.env.JWT_SECRET!
+        );
+
+        const res = await request(app).get('/api/auth/me').set('Authorization', `Bearer ${legacy}`);
+        expect(res.status).toBe(401);
+        expect(res.body.error).toMatch(/invalid or expired/i);
+    });
+
+    it('rejects a legacy token on the dream routes too', async () => {
+        const legacy = jwt.sign(
+            { email: 'legacy@test.local', name: 'Dreamer' },
+            process.env.JWT_SECRET!
+        );
+
+        const res = await request(app).get('/api/dreams').set('Authorization', `Bearer ${legacy}`);
+        expect(res.status).toBe(401);
     });
 });
 
