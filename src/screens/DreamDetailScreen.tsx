@@ -1,42 +1,47 @@
 import { useState } from 'react';
-import { ArrowLeft, MessageSquare } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Loader2, Send } from 'lucide-react';
 import { useDreamStore } from '../hooks/useDreamStore';
+import { errorMessage } from '../types/index';
 import Card from '../components/Card';
 
 export default function DreamDetailScreen({ dreamId, onBack }: { dreamId: string; onBack: () => void }) {
-    const { getDream, language: appLanguage } = useDreamStore();
+    const { getDream, language: appLanguage, sendChatMessage } = useDreamStore();
     const dream = getDream(dreamId);
 
     // Determine language: Prefer dream's specific language, fallback to app language
     const lang = dream?.language || appLanguage;
 
     const [chatInput, setChatInput] = useState('');
+    const [isSending, setIsSending] = useState(false);
+    const [chatError, setChatError] = useState('');
 
-    // Localized Initial Message
+    // Opening line from the analyst. Not persisted: a greeting, not a turn.
     const initialMsg = lang === 'mk'
         ? `Го толкував овој сон${dream?.model ? ` користејќи ја рамката ${dream.model}` : ''}. Имате ли конкретни прашања?`
         : `I have interpreted this dream${dream?.model ? ` using the ${dream.model} framework` : ''}. Do you have specific questions?`;
 
-    const [messages, setMessages] = useState([
-        { role: 'ai', text: initialMsg }
-    ]);
-
     if (!dream) return <div>Dream not found</div>;
 
-    const handleChat = () => {
-        if (!chatInput.trim()) return;
-        const userMsg = { role: 'user', text: chatInput };
-        setMessages(prev => [...prev, userMsg]);
+    // The transcript lives on the dream, so it survives navigation and reload.
+    const messages = dream.chatHistory ?? [];
+
+    const handleChat = async () => {
+        const question = chatInput.trim();
+        if (!question || isSending) return;
+
+        setChatError('');
+        setIsSending(true);
         setChatInput('');
 
-        // Simulate AI Reply
-        setTimeout(() => {
-            const reply = lang === 'mk'
-                ? "Тоа е интересно забележување. Симболот сугерира подлабок слој на значење во врска со вашето внатрешно јас."
-                : "That is an interesting observation. The symbol suggests a deeper layer of meaning regarding your inner self.";
-
-            setMessages(prev => [...prev, { role: 'ai', text: reply }]);
-        }, 1000);
+        try {
+            await sendChatMessage(dream.id, question);
+        } catch (err) {
+            // Put the question back rather than losing it to a failed request.
+            setChatInput(question);
+            setChatError(errorMessage(err));
+        } finally {
+            setIsSending(false);
+        }
     };
 
     return (
@@ -148,25 +153,53 @@ export default function DreamDetailScreen({ dreamId, onBack }: { dreamId: string
                     </h3>
 
                     <div className="space-y-3 mb-4 max-h-60 overflow-y-auto pr-2">
+                        <div className="flex justify-start">
+                            <div className="max-w-[80%] p-3 rounded-lg text-sm bg-surfaceLight text-gray-300">
+                                {initialMsg}
+                            </div>
+                        </div>
+
                         {messages.map((m, i) => (
                             <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[80%] p-3 rounded-lg text-sm ${m.role === 'user' ? 'bg-border text-black' : 'bg-surfaceLight text-gray-300'}`}>
-                                    {m.text}
+                                <div className={`max-w-[80%] p-3 rounded-lg text-sm whitespace-pre-wrap ${m.role === 'user' ? 'bg-border text-black' : 'bg-surfaceLight text-gray-300'}`}>
+                                    {m.content}
                                 </div>
                             </div>
                         ))}
+
+                        {isSending && (
+                            <div className="flex justify-start">
+                                <div className="p-3 rounded-lg bg-surfaceLight text-gray-400 flex items-center gap-2 text-sm">
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    {lang === 'mk' ? 'Размислувам...' : 'Thinking...'}
+                                </div>
+                            </div>
+                        )}
                     </div>
+
+                    {chatError && (
+                        <div role="alert" className="mb-3 bg-red-900/10 border border-red-900/30 rounded-lg p-3">
+                            <p className="text-red-400 text-xs text-center">{chatError}</p>
+                        </div>
+                    )}
 
                     <div className="flex gap-2">
                         <input
-                            className="flex-1 bg-surface border border-border/30 rounded-lg px-3 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-border/60"
+                            className="flex-1 bg-surface border border-border/30 rounded-lg px-3 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-border/60 disabled:opacity-50"
                             placeholder={lang === 'mk' ? "Постави прашање..." : "Ask a question..."}
                             value={chatInput}
                             onChange={e => setChatInput(e.target.value)}
-                            onKeyDown={e => e.key === 'Enter' && handleChat()}
+                            onKeyDown={e => { if (e.key === 'Enter') handleChat(); }}
+                            disabled={isSending}
+                            aria-label={lang === 'mk' ? 'Постави прашање' : 'Ask a question'}
                         />
-                        <button onClick={handleChat} className="p-3 bg-border rounded-lg text-black hover:bg-accent transition-colors">
-                            <ArrowLeft className="w-5 h-5 rotate-180" />
+                        <button
+                            onClick={handleChat}
+                            disabled={isSending || !chatInput.trim()}
+                            aria-label={lang === 'mk' ? 'Испрати' : 'Send'}
+                            className="p-3 bg-border rounded-lg text-black hover:bg-accent transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                            {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
                         </button>
                     </div>
                 </section>

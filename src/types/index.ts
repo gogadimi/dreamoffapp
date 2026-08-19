@@ -21,6 +21,11 @@ export interface DreamInterpretation {
     themes?: string[];
 }
 
+export interface ChatMessage {
+    role: 'user' | 'assistant';
+    content: string;
+}
+
 export interface Dream {
     id: string;
     date: string;
@@ -29,7 +34,7 @@ export interface Dream {
     lucid: boolean;
     themes: string[];
     mood: string;
-    chatHistory: { role: 'user' | 'assistant'; content: string }[];
+    chatHistory: ChatMessage[];
     text?: string;
     imageUrl?: string;
     model?: string;

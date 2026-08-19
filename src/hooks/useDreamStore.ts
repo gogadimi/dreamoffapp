@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { apiRegister, apiLogin, apiGetMe, removeToken, getToken, setUnauthorizedHandler } from '../services/authApi';
-import { fetchDreams, createDream, deleteDreamApi } from '../services/dreamsApi';
-import { Dream, User, errorMessage } from '../types/index';
+import { fetchDreams, createDream, deleteDreamApi, sendChatMessage } from '../services/dreamsApi';
+import { Dream, User, ChatMessage, errorMessage } from '../types/index';
 
 // ============================================================
 // 1. Global State (Singleton)
@@ -148,7 +148,19 @@ const store = {
         }
     },
 
-    getDream: (id: string) => memoryState.dreams.find(d => d.id === id)
+    getDream: (id: string) => memoryState.dreams.find(d => d.id === id),
+
+    // Sends a question about one dream and stores the reply. The server owns
+    // the transcript, so its version replaces ours rather than being merged.
+    sendChatMessage: async (dreamId: string, message: string): Promise<ChatMessage[]> => {
+        const { chatHistory } = await sendChatMessage(dreamId, message);
+        memoryState = {
+            ...memoryState,
+            dreams: memoryState.dreams.map(d => (d.id === dreamId ? { ...d, chatHistory } : d))
+        };
+        notify();
+        return chatHistory;
+    }
 };
 
 // Any request that comes back 401 means the token is gone or rejected.
@@ -182,6 +194,7 @@ export function useDreamStore() {
 
         addDream: store.addDream,
         deleteDream: store.deleteDream,
-        getDream: store.getDream
+        getDream: store.getDream,
+        sendChatMessage: store.sendChatMessage
     };
 }
