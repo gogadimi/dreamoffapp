@@ -1,4 +1,4 @@
-import { Search, ArrowLeft } from 'lucide-react';
+import { Search, ArrowLeft, Moon } from 'lucide-react';
 import Card from '../components/Card';
 import { useDreamStore } from '../hooks/useDreamStore';
 
@@ -43,11 +43,17 @@ export default function ArchiveScreen({ onNavigate }) {
                     >
                         {/* Horizontal layout inside Card's inner flex-col wrapper */}
                         <div className="flex items-center gap-4 p-4">
-                            <img
-                                src={dream.imageUrl}
-                                alt="Dream thumbnail"
-                                className="w-[60px] h-[60px] rounded-xl object-cover border border-border/30 flex-shrink-0"
-                            />
+                            {dream.imageUrl ? (
+                                <img
+                                    src={dream.imageUrl}
+                                    alt="Dream thumbnail"
+                                    className="w-[60px] h-[60px] rounded-xl object-cover border border-border/30 flex-shrink-0"
+                                />
+                            ) : (
+                                <div className="w-[60px] h-[60px] rounded-xl border border-border/30 bg-surfaceLight/30 flex items-center justify-center flex-shrink-0">
+                                    <Moon className="w-6 h-6 text-gray-600" />
+                                </div>
+                            )}
                             <div className="flex-1 min-w-0 flex flex-col gap-1">
                                 <span className="text-[10px] text-accent/80 uppercase tracking-[0.15em] font-semibold">
                                     {new Date(dream.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}

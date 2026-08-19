@@ -1,29 +1,74 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from './db.js';
 
+export interface DreamSymbol {
+  element: string;
+  archetype?: string;
+  meaning: string;
+}
+
+export interface DreamInterpretation {
+  summary?: string;
+  overview?: string;
+  archetypes?: string;
+  scientific?: string;
+  symbols?: DreamSymbol[];
+  reflections?: string[];
+  actions?: string[];
+  themes?: string[];
+}
+
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 interface DreamAttributes {
   id: string;
   date: Date;
-  title: string;
-  content: string;
+  title: string | null;
+  content: string | null;
   lucid: boolean;
-  mood: string;
-  themes: any[];
-  chatHistory: any[];
+  mood: string | null;
+  themes: string[];
+  chatHistory: ChatMessage[];
+  // ── The dream as the app actually produces it ──
+  text: string | null;
+  model: string | null;
+  language: string | null;
+  layout: string | null;
+  transcription: string | null;
+  interpretation: DreamInterpretation | string | null;
+  imageUrl: string | null;
   userId?: string;
 }
-interface DreamCreationAttributes extends Optional<DreamAttributes, 'id' | 'date' | 'lucid' | 'themes' | 'chatHistory'> {}
 
+type DreamOptionalAttributes =
+  | 'id' | 'date' | 'lucid' | 'themes' | 'chatHistory'
+  | 'title' | 'content' | 'mood'
+  | 'text' | 'model' | 'language' | 'layout'
+  | 'transcription' | 'interpretation' | 'imageUrl';
+
+interface DreamCreationAttributes extends Optional<DreamAttributes, DreamOptionalAttributes> {}
+
+// See the note in User.ts — `declare` is required, `public x!: T` is not.
 class Dream extends Model<DreamAttributes, DreamCreationAttributes> implements DreamAttributes {
-  public id!: string;
-  public date!: Date;
-  public title!: string;
-  public content!: string;
-  public lucid!: boolean;
-  public mood!: string;
-  public themes!: any[];
-  public chatHistory!: any[];
-  public userId!: string;
+  declare id: string;
+  declare date: Date;
+  declare title: string | null;
+  declare content: string | null;
+  declare lucid: boolean;
+  declare mood: string | null;
+  declare themes: string[];
+  declare chatHistory: ChatMessage[];
+  declare text: string | null;
+  declare model: string | null;
+  declare language: string | null;
+  declare layout: string | null;
+  declare transcription: string | null;
+  declare interpretation: DreamInterpretation | string | null;
+  declare imageUrl: string | null;
+  declare userId: string;
 }
 
 Dream.init({
@@ -34,7 +79,16 @@ Dream.init({
     lucid: { type: DataTypes.BOOLEAN, defaultValue: false },
     mood: { type: DataTypes.STRING, allowNull: true },
     themes: { type: DataTypes.JSON, defaultValue: [] },
-    chatHistory: { type: DataTypes.JSON, defaultValue: [] }
+    chatHistory: { type: DataTypes.JSON, defaultValue: [] },
+    text: { type: DataTypes.TEXT, allowNull: true },
+    model: { type: DataTypes.STRING, allowNull: true },
+    language: { type: DataTypes.STRING, allowNull: true },
+    layout: { type: DataTypes.STRING, allowNull: true },
+    transcription: { type: DataTypes.TEXT, allowNull: true },
+    interpretation: { type: DataTypes.JSON, allowNull: true },
+    // TODO: base64 data URIs bloat every row and every list response.
+    // Move to on-disk/object storage and keep only a path here.
+    imageUrl: { type: DataTypes.TEXT, allowNull: true }
 }, { sequelize, modelName: 'Dream', timestamps: true });
 
 export default Dream;

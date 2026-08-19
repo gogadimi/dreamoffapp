@@ -3,7 +3,7 @@ import { ArrowLeft, MessageSquare } from 'lucide-react';
 import { useDreamStore } from '../hooks/useDreamStore';
 import Card from '../components/Card';
 
-export default function DreamDetailScreen({ dreamId, onBack }) {
+export default function DreamDetailScreen({ dreamId, onBack }: { dreamId: string; onBack: () => void }) {
     const { getDream, language: appLanguage } = useDreamStore();
     const dream = getDream(dreamId);
 
@@ -14,8 +14,8 @@ export default function DreamDetailScreen({ dreamId, onBack }) {
 
     // Localized Initial Message
     const initialMsg = lang === 'mk'
-        ? `Го толкував овој сон користејќи ја рамката ${dream?.model}. Имате ли конкретни прашања?`
-        : `I have interpreted this dream using the ${dream?.model} framework. Do you have specific questions?`;
+        ? `Го толкував овој сон${dream?.model ? ` користејќи ја рамката ${dream.model}` : ''}. Имате ли конкретни прашања?`
+        : `I have interpreted this dream${dream?.model ? ` using the ${dream.model} framework` : ''}. Do you have specific questions?`;
 
     const [messages, setMessages] = useState([
         { role: 'ai', text: initialMsg }
@@ -46,25 +46,27 @@ export default function DreamDetailScreen({ dreamId, onBack }) {
                 <ArrowLeft className="w-5 h-5 mr-1" /> Back
             </button>
 
-            {/* Image */}
-            <div className="relative aspect-video rounded-xl overflow-hidden border-2 border-border shadow-glow mb-6 group">
-                <img src={dream.imageUrl} alt="Dream Visualization" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
-                    <h2 className="text-white font-serif text-xl opacity-90">Visual Manifestation</h2>
+            {/* Image — omitted entirely when generation failed or was skipped */}
+            {dream.imageUrl && (
+                <div className="relative aspect-video rounded-xl overflow-hidden border-2 border-border shadow-glow mb-6 group">
+                    <img src={dream.imageUrl} alt="Dream Visualization" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
+                        <h2 className="text-white font-serif text-xl opacity-90">Visual Manifestation</h2>
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Interpretation Section */}
             <div className="space-y-6">
                 <section>
-                    <h3 className="text-accent text-sm uppercase tracking-widest mb-2 font-bold">Analysis ({dream.model})</h3>
+                    <h3 className="text-accent text-sm uppercase tracking-widest mb-2 font-bold">Analysis{dream.model ? ` (${dream.model})` : ''}</h3>
 
                     {/* Render Logic: Check if it's a legacy string or a modern Object */}
                     {typeof dream.interpretation === 'string' ? (
                         <Card className="prose prose-invert max-w-none">
                             <p className="text-lg leading-relaxed text-gray-300">{dream.interpretation}</p>
                         </Card>
-                    ) : (
+                    ) : dream.interpretation ? (
                         <div className="space-y-4">
                             {/* Summary */}
                             <Card className="text-lg text-primary/90 italic border-l-4 border-gold bg-surfaceLight/30">
@@ -121,15 +123,23 @@ export default function DreamDetailScreen({ dreamId, onBack }) {
                                 </div>
                             )}
                         </div>
+                    ) : (
+                        <Card className="text-center text-gray-500 italic py-8">
+                            {lang === 'mk'
+                                ? 'Толкувањето не е достапно за овој сон.'
+                                : 'No interpretation is available for this dream.'}
+                        </Card>
                     )}
                 </section>
 
-                <section>
-                    <h3 className="text-accent text-sm uppercase tracking-widest mb-2 font-bold">Transcription</h3>
-                    <div className="bg-surfaceLight/50 p-4 rounded-lg italic text-gray-400 border-l-2 border-border">
-                        "{dream.transcription}"
-                    </div>
-                </section>
+                {(dream.transcription || dream.text) && (
+                    <section>
+                        <h3 className="text-accent text-sm uppercase tracking-widest mb-2 font-bold">Transcription</h3>
+                        <div className="bg-surfaceLight/50 p-4 rounded-lg italic text-gray-400 border-l-2 border-border">
+                            "{dream.transcription || dream.text}"
+                        </div>
+                    </section>
+                )}
 
                 {/* Chat */}
                 <section className="pt-4 border-t border-border/20">

@@ -5,19 +5,23 @@ interface UserAttributes {
   id: string;
   name: string;
   email: string;
-  password?: string;
+  password: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
 interface UserCreationAttributes extends Optional<UserAttributes, 'id'> {}
 
+// NOTE: every attribute below uses `declare` (not `public x!: T`).
+// Real class fields are emitted under target ES2022 and would shadow
+// Sequelize's attribute getters/setters, making every read undefined.
+// https://sequelize.org/docs/v6/core-concepts/model-basics/#caveat-with-public-class-fields
 class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
-  public id!: string;
-  public name!: string;
-  public email!: string;
-  public password!: string;
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  declare id: string;
+  declare name: string;
+  declare email: string;
+  declare password: string;
+  declare readonly createdAt: Date;
+  declare readonly updatedAt: Date;
 }
 
 User.init({

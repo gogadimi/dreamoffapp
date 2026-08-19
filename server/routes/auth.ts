@@ -4,7 +4,7 @@
 // GET  /me       — return current user profile (protected)
 
 import { Router, Request, Response } from 'express';
-import * as bcrypt from 'bcryptjs';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/index.js';
 import { authenticateToken } from '../middleware/auth.js';

@@ -20,9 +20,11 @@ function App() {
     // Derived state for clarity
     const isLoggedIn = !!currentUser;
 
-    const [navState, setNavState] = useState({ screen: 'home', params: null });
+    const [navState, setNavState] = useState<{ screen: string; params?: any }>({ screen: 'home' });
 
-    const navigate = (screen, params = null) => {
+    // params stays undefined when omitted — passing null here would defeat the
+    // callee's default parameter (defaults fire on undefined, not on null).
+    const navigate = (screen: string, params?: any) => {
         setNavState({ screen, params });
     };
 
@@ -32,7 +34,7 @@ function App() {
                 return <HomeScreen onNavigate={navigate} />;
             case 'add':
                 // Pass navState.params as initialMode ('record' or 'write')
-                return <AddDreamScreen onNavigate={navigate} initialMode={navState.params} />;
+                return <AddDreamScreen onNavigate={navigate} initialMode={navState.params ?? 'write'} />;
             case 'archive':
                 return <ArchiveScreen onNavigate={navigate} />;
             case 'models':
