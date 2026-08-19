@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:server": "cd server && npm run dev",
+    "dev:server": "npm run dev --prefix server",
     "build": "vite build",
-    "start": "cd server && node server.js",
+    "start": "npm start --prefix server",
     "lint": "eslint .",
     "preview": "vite preview"
   },

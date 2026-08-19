@@ -8,6 +8,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/index.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { JWT_SECRET, JWT_EXPIRES_IN } from '../config.js';
 
 const router = Router();
 const SALT_ROUNDS = 10;
@@ -15,8 +16,8 @@ const SALT_ROUNDS = 10;
 function generateToken(user: any) {
     return jwt.sign(
         { email: user.email, name: user.name },
-        process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRES_IN }
     );
 }
 

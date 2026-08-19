@@ -2,7 +2,8 @@
 // Express + lowdb + JWT authentication
 // Serves built React frontend in production
 
-import 'dotenv/config';
+// Import config first — it validates the environment and exits on failure.
+import { PORT, IS_PRODUCTION } from './config.js';
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { join, dirname } from 'node:path';
@@ -15,11 +16,9 @@ import aiRoutes from './routes/ai.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-// ── CORS — restrict in production, open in dev ──
-const isProduction = process.env.NODE_ENV === 'production';
-app.use(cors(isProduction ? { origin: false } : {}));
+// ── CORS — same-origin only in production, open in dev ──
+app.use(cors(IS_PRODUCTION ? { origin: false } : {}));
 
 // Parse JSON bodies
 app.use(express.json());
@@ -47,7 +46,7 @@ async function start() {
     await initDB();
     await syncDB();
     app.listen(PORT, () => {
-        console.log(`[DreamOff] Server running on port ${PORT} (${isProduction ? 'production' : 'development'})`);
+        console.log(`[DreamOff] Server running on port ${PORT} (${IS_PRODUCTION ? 'production' : 'development'})`);
     });
 }
 

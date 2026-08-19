@@ -129,3 +129,17 @@ server/db.json
 # Vite
 dist-ssr/
 *.local
+
+# ── Build output (CI runs `npm run build` and deploys ./dist) ──
+dist/
+
+# ── Local database — contains password hashes and user data, never commit ──
+*.sqlite
+*.sqlite-journal
+database.sqlite
+
+# ── Server runtime logs ──
+server/*.log
+
+# ── Packaging artifacts ──
+*.zip

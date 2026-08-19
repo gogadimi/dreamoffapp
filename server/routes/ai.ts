@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { HfInference } from '@huggingface/inference';
 import { authenticateToken } from '../middleware/auth.js';
+import { GEMINI_API_KEY, HUGGINGFACE_API_KEY } from '../config.js';
 
 const router = Router();
 
@@ -10,11 +11,11 @@ router.post('/interpret', authenticateToken, async (req: any, res: any) => {
     try {
         const { text, model, language, layout } = req.body;
         
-        if (!process.env.GEMINI_API_KEY) {
+        if (!GEMINI_API_KEY) {
             return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server.' });
         }
 
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
         const generativeModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         
         const langString = language === 'mk' ? 'Macedonian' : 'English';
@@ -65,13 +66,13 @@ router.post('/image', authenticateToken, async (req: any, res: any) => {
     try {
         const { text } = req.body;
         
-        if (!process.env.GEMINI_API_KEY || !process.env.HUGGINGFACE_API_KEY) {
+        if (!GEMINI_API_KEY || !HUGGINGFACE_API_KEY) {
             return res.status(500).json({ error: 'API Keys are not configured on the server.' });
         }
 
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
         const generativeModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-        const hf = new HfInference(process.env.HUGGINGFACE_API_KEY);
+        const hf = new HfInference(HUGGINGFACE_API_KEY);
 
         // 1. Generate an optimized image generation prompt from the dream text
         const promptGen = await generativeModel.generateContent(`Create a short, descriptive 1-sentence prompt for an AI image generator (like Midjourney or DALL-E) based on this dream. Aim for a surreal, cinematic, mystical, and beautiful aesthetic. The dream is: "${text}". Reply ONLY with the English image prompt. Do NOT include any prefixes like "Prompt:".`);
