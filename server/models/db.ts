@@ -3,7 +3,8 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const dbPath = join(__dirname, '..', '..', 'database.sqlite'); // Store in project root
+// Defaults to the project root; DATABASE_PATH lets tests point at a scratch file.
+const dbPath = process.env.DATABASE_PATH || join(__dirname, '..', '..', 'database.sqlite');
 
 const sequelize = new Sequelize({
   dialect: 'sqlite',

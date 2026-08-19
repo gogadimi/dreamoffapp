@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-export const UPLOADS_DIR = join(__dirname, 'uploads');
+export const UPLOADS_DIR = process.env.UPLOADS_PATH || join(__dirname, 'uploads');
 export const UPLOADS_ROUTE = '/uploads';
 
 const EXTENSION_BY_MIME: Record<string, string> = {
