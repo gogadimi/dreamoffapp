@@ -84,7 +84,6 @@ out
 
 # Nuxt.js build / generate output
 .nuxt
-dist
 
 # Gatsby files
 .cache/
@@ -124,7 +123,26 @@ Desktop.ini
 # MacOS
 .DS_Store
 
+# Server DB (auto-generated)
+server/db.json
+
 # Vite
-dist/
 dist-ssr/
 *.local
+
+# ── Build output (CI runs `npm run build` and deploys ./dist) ──
+dist/
+
+# ── Local database — contains password hashes and user data, never commit ──
+*.sqlite
+*.sqlite-journal
+database.sqlite
+
+# ── Server runtime logs ──
+server/*.log
+
+# ── Packaging artifacts ──
+*.zip
+
+# Generated dream images
+server/uploads/

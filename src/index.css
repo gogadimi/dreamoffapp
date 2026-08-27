@@ -21,6 +21,17 @@ h6 {
     @apply font-serif;
 }
 
+/* Hide scrollbar utility */
+@layer utilities {
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+}
+
 /* Scrollbar styling for desktop/web */
 ::-webkit-scrollbar {
     width: 8px;

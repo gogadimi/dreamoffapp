@@ -48,6 +48,24 @@
    npm run build
    ```
 
+## 🚀 Deployment
+
+The application is configured to automatically deploy to cPanel (`dreamoff.kiberius.com`) via GitHub Actions when you push to the `main` branch.
+
+### Prerequisites for Auto-Deployment
+You must set up the following **GitHub Secrets** in your repository settings:
+
+1. **FTP_SERVER**: Your FTP host (e.g., `ftp.kiberius.com` or IP address).
+2. **FTP_USERNAME**: Your FTP username.
+3. **FTP_PASSWORD**: Your FTP password.
+
+### Manual Deployment Fallback
+If you prefer to deploy manually:
+1. Run `npm run build` locally.
+2. Open the `dist/` folder.
+3. Upload the **contents** of the `dist/` folder directly to your cPanel directory (`dreamoff.kiberius.com/`).
+4. Ensure `index.html` is in the root directory and NOT inside a `dist/` folder on the server.
+
 ## 📂 Project Structure
 
 ```
